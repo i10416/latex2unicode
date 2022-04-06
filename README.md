@@ -62,17 +62,7 @@ System.out.println(unicode);
 ```
 
 
-## Maven / SBT Dependency
-
-To add dependency on LaTeX2Unicode, insert the following to your `pom.xml` file if you use Apache Maven:
-
-```xml
-<dependency>
-    <groupId>dev.i10416</groupId>
-    <artifactId>latex2unicode_2.13</artifactId>
-    <version>0.0.1</version>
-</dependency>
-```
+## SBT Dependency
 
 or add the following to your `build.sbt` file if you use sbt 0.11+:
 
