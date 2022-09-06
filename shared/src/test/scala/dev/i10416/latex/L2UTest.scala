@@ -7,11 +7,9 @@ import org.scalatest.funsuite.AnyFunSuite
 
 class L2UTest extends AnyFunSuite {
   test("spaceCountNewLines counts new lines inside spaces") {
-    LatexParser.spacesCountNewLines
-      .parse("    \n\n \r \n  ")
-      .right
-      .get
-      ._2 shouldBe 4
+    val Right((_, a)) =
+      LatexParser.spacesCountNewLines.parse("    \n\n \r \n  ")
+    a shouldBe 4
   }
   test("not takes 1 argument") {
     LatexParser.argCnt("\\not") shouldBe 1
@@ -29,19 +27,23 @@ class L2UTest extends AnyFunSuite {
     LatexParser.standalone.parse("~").isRight shouldBe true
   }
   test("~ is standalone expr") {
-    LatexParser.standaloneExpr.parse("~").right.get._2 shouldBe Str(" ")
+    val Right((_, a)) = LatexParser.standaloneExpr.parse("~")
+    a shouldBe Str(" ")
   }
   test("$~ are standalone exprs") {
     LatexParser.standalone.parse("$~").isRight shouldBe true
   }
   test("parser ignores $") {
-    LatexParser.parse("$").right.get._1 shouldBe ""
+    val Right((a, _)) = LatexParser.parse("$")
+    a shouldBe ""
   }
   test("Empty string is valid latex input") {
-    LatexParser.parse("").right.get._2 shouldBe ""
+    val Right((_, empty)) = LatexParser.parse("")
+    empty shouldBe ""
   }
   test("single space is a block") {
-    LatexParser.parse(" ").right.get._2 shouldBe " "
+    val Right((_, space)) = LatexParser.parse(" ")
+    space shouldBe " "
   }
   test("a literal") {
     val Right((_, r)) = LatexParser.parse("a")
@@ -112,27 +114,35 @@ class L2UTest extends AnyFunSuite {
   test("\\not") {
     val Right((_, r)) = LatexParser.parse("""\not 1""")
     r shouldBe "1̸"
-    LatexParser.parse("""\not{123}""").right.get._2 shouldBe "1̸23"
-    LatexParser.parse("""\not{ 123 }""").right.get._2 shouldBe "1̸23"
-    LatexParser.parse("""\not \in""").right.get._2 shouldBe "∉"
-    //L2U.parse2("""\not=""").right.get._2 shouldBe "≠"
-    LatexParser.parse("""\not{}""").right.get._2 shouldBe " ̸"
+    val Right((_, a)) = LatexParser.parse("""\not{123}""")
+    a shouldBe "1̸23"
+    val Right((_, not123)) = LatexParser.parse("""\not{ 123 }""")
+    not123 shouldBe "1̸23"
+    val Right((_, notin)) = LatexParser.parse("""\not \in""")
+    notin shouldBe "∉"
+    //L2U.parse2("""\not=""").toOption.get._2 shouldBe "≠"
+    val Right((_, notbrace)) = LatexParser.parse("""\not{}""")
+    notbrace shouldBe " ̸"
   }
 
   test("\\frac") {
-    LatexParser.parse("\\frac{}{}").right.get._2 shouldBe ""
-    LatexParser.parse("\\frac34").right.get._2 shouldBe "¾"
-    LatexParser.parse("\\frac{3}4").right.get._2 shouldBe "¾"
-    LatexParser.parse("\\frac3{4}").right.get._2 shouldBe "¾"
-    LatexParser.parse("\\frac 3 {4}").right.get._2 shouldBe "¾"
-    LatexParser.parse("\\frac 34").right.get._2 shouldBe "¾"
-    LatexParser.parse("\\frac{1}{}").right.get._2 shouldBe "(1/)"
-    LatexParser.parse("\\frac{}{1}").right.get._2 shouldBe "(/1)"
-    LatexParser.parse("\\frac{a+b}{c}").right.get._2 shouldBe "((a+b)/c)"
-    LatexParser.parse("\\frac{a}{b+c}").right.get._2 shouldBe "(a/(b+c))"
-    LatexParser.parse("\\frac{a+b}{c+d}").right.get._2 shouldBe "((a+b)/(c+d))"
-    LatexParser.parse("\\frac~{4}").right.get._2 shouldBe "(/4)"
-    LatexParser.parse("\\frac${4}").right.get._2 shouldBe "(/4)"
+    LatexParser.parse("\\frac{}{}").toOption.get._2 shouldBe ""
+    LatexParser.parse("\\frac34").toOption.get._2 shouldBe "¾"
+    LatexParser.parse("\\frac{3}4").toOption.get._2 shouldBe "¾"
+    LatexParser.parse("\\frac3{4}").toOption.get._2 shouldBe "¾"
+    LatexParser.parse("\\frac 3 {4}").toOption.get._2 shouldBe "¾"
+    LatexParser.parse("\\frac 34").toOption.get._2 shouldBe "¾"
+    LatexParser.parse("\\frac{1}{}").toOption.get._2 shouldBe "(1/)"
+    LatexParser.parse("\\frac{}{1}").toOption.get._2 shouldBe "(/1)"
+    LatexParser.parse("\\frac{a+b}{c}").toOption.get._2 shouldBe "((a+b)/c)"
+    LatexParser.parse("\\frac{a}{b+c}").toOption.get._2 shouldBe "(a/(b+c))"
+    LatexParser
+      .parse("\\frac{a+b}{c+d}")
+      .toOption
+      .get
+      ._2 shouldBe "((a+b)/(c+d))"
+    LatexParser.parse("\\frac~{4}").toOption.get._2 shouldBe "(/4)"
+    LatexParser.parse("\\frac${4}").toOption.get._2 shouldBe "(/4)"
 
     /*
     LaTeX2Unicode.convert("\\frac\n34") shouldBe "¾"
@@ -143,75 +153,76 @@ class L2UTest extends AnyFunSuite {
   }
 
   test("\\sqrt") {
-    LatexParser.expr.parse("\\sqrt1").right.get._2 shouldBe "√1̅"
-    LatexParser.parse("\\sqrt{}").right.get._2 shouldBe "√"
-    LatexParser.parse("\\sqrt x").right.get._2 shouldBe "√x̅"
-    LatexParser.parse("\\sqrt \\alpha").right.get._2 shouldBe "√α̅"
-    //LatexParser.parse("\\sqrt\nx").right.get._2 shouldBe "√x̅"
-    LatexParser.parse("\\sqrt[]x").right.get._2 shouldBe "√x̅"
-    LatexParser.parse("\\sqrt[]\nx").right.get._2 shouldBe "√x̅"
-    LatexParser.parse("\\sqrt{x+1}").right.get._2 shouldBe "√x̅+̅1̅"
-    LatexParser.parse("\\sqrt2").right.get._2 shouldBe "√2̅"
-    LatexParser.parse("\\sqrt1+1").right.get._2 shouldBe "√1̅+1"
-    LatexParser.parse("\\sqrt[2]x").right.get._2 shouldBe "√x̅"
-    LatexParser.parse("\\sqrt[3]{x}").right.get._2 shouldBe "∛x̅"
-    LatexParser.parse("\\sqrt[3]{}").right.get._2 shouldBe "∛"
-    //LatexParser.parse("\\sqrt[\\alpha+1]x").right.get._2 shouldBe "ᵅ⁺¹√x̅"
-    //LatexParser.parse("\\sqrt[\\alpha+1]\nx").right.get._2 shouldBe "ᵅ⁺¹√x̅"
-    LatexParser.parse("\\sqrt[q]{x}").right.get._2 shouldBe "(q)√x̅"
+    LatexParser.expr.parse("\\sqrt1").toOption.get._2 shouldBe "√1̅"
+    LatexParser.parse("\\sqrt{}").toOption.get._2 shouldBe "√"
+    LatexParser.parse("\\sqrt x").toOption.get._2 shouldBe "√x̅"
+    LatexParser.parse("\\sqrt \\alpha").toOption.get._2 shouldBe "√α̅"
+    //LatexParser.parse("\\sqrt\nx").toOption.get._2 shouldBe "√x̅"
+    LatexParser.parse("\\sqrt[]x").toOption.get._2 shouldBe "√x̅"
+    LatexParser.parse("\\sqrt[]\nx").toOption.get._2 shouldBe "√x̅"
+    LatexParser.parse("\\sqrt{x+1}").toOption.get._2 shouldBe "√x̅+̅1̅"
+    LatexParser.parse("\\sqrt2").toOption.get._2 shouldBe "√2̅"
+    LatexParser.parse("\\sqrt1+1").toOption.get._2 shouldBe "√1̅+1"
+    LatexParser.parse("\\sqrt[2]x").toOption.get._2 shouldBe "√x̅"
+    LatexParser.parse("\\sqrt[3]{x}").toOption.get._2 shouldBe "∛x̅"
+    LatexParser.parse("\\sqrt[3]{}").toOption.get._2 shouldBe "∛"
+    //LatexParser.parse("\\sqrt[\\alpha+1]x").toOption.get._2 shouldBe "ᵅ⁺¹√x̅"
+    //LatexParser.parse("\\sqrt[\\alpha+1]\nx").toOption.get._2 shouldBe "ᵅ⁺¹√x̅"
+    LatexParser.parse("\\sqrt[q]{x}").toOption.get._2 shouldBe "(q)√x̅"
   }
 
   test("Subscript") {
-    LatexParser.parse("i_{}").right.get._2 shouldBe "i"
-    LatexParser.parse("i_123").right.get._2 shouldBe "i₁23"
-    LatexParser.parse("{}_1").right.get._2 shouldBe "₁"
-    LatexParser.parse("i_{123}").right.get._2 shouldBe "i₁₂₃"
-    LatexParser.parse("i_  {123}").right.get._2 shouldBe "i₁₂₃"
-    LatexParser.parse("i_\n  {123}").right.get._2 shouldBe "i₁₂₃"
-    LatexParser.parse("i\\textsubscript{123}").right.get._2 shouldBe "i₁₂₃"
-    LatexParser.parse("i\\textsubscript 123").right.get._2 shouldBe "i₁23"
-    LatexParser.parse("i_{i_{123 }}").right.get._2 shouldBe "i_(i₁₂₃)"
-    LatexParser.parse("i_{i_{1~2~3 }}").right.get._2 shouldBe "i_(i₁ ₂ ₃)"
+    LatexParser.parse("i_{}").toOption.get._2 shouldBe "i"
+    LatexParser.parse("i_123").toOption.get._2 shouldBe "i₁23"
+    LatexParser.parse("{}_1").toOption.get._2 shouldBe "₁"
+    LatexParser.parse("i_{123}").toOption.get._2 shouldBe "i₁₂₃"
+    LatexParser.parse("i_  {123}").toOption.get._2 shouldBe "i₁₂₃"
+    LatexParser.parse("i_\n  {123}").toOption.get._2 shouldBe "i₁₂₃"
+    LatexParser.parse("i\\textsubscript{123}").toOption.get._2 shouldBe "i₁₂₃"
+    LatexParser.parse("i\\textsubscript 123").toOption.get._2 shouldBe "i₁23"
+    LatexParser.parse("i_{i_{123 }}").toOption.get._2 shouldBe "i_(i₁₂₃)"
+    LatexParser.parse("i_{i_{1~2~3 }}").toOption.get._2 shouldBe "i_(i₁ ₂ ₃)"
     LatexParser
       .parse(
         "i\\textsubscript{i\\textsubscript{123 }}"
       )
-      .right
+      .toOption
       .get
       ._2 shouldBe "i_(i₁₂₃)"
     /*LaTeX2Unicode.convert("i\\textsubscript\n  { 123 }") shouldBe "i₁₂₃"*/
   }
 
   test("Superscript") {
-    LatexParser.parse("i^{}").right.get._2 shouldBe "i"
-    LatexParser.parse("i^{ }").right.get._2 shouldBe "i"
-    LatexParser.parse("i^{  }").right.get._2 shouldBe "i"
-    LatexParser.parse("i^{123}").right.get._2 shouldBe "i¹²³"
-    LatexParser.parse("i^\n {123}").right.get._2 shouldBe "i¹²³"
-    LatexParser.parse("i^{i^{1~2~3 }}").right.get._2 shouldBe "i^(i¹ ² ³)"
-    LatexParser.parse("i\\textsuperscript 123").right.get._2 shouldBe "i¹23"
-    LatexParser.parse("i\\textsuperscript{123}").right.get._2 shouldBe "i¹²³"
+
+    LatexParser.parse("i^{}").toOption.get._2 shouldBe "i"
+    LatexParser.parse("i^{ }").toOption.get._2 shouldBe "i"
+    LatexParser.parse("i^{  }").toOption.get._2 shouldBe "i"
+    LatexParser.parse("i^{123}").toOption.get._2 shouldBe "i¹²³"
+    LatexParser.parse("i^\n {123}").toOption.get._2 shouldBe "i¹²³"
+    LatexParser.parse("i^{i^{1~2~3 }}").toOption.get._2 shouldBe "i^(i¹ ² ³)"
+    LatexParser.parse("i\\textsuperscript 123").toOption.get._2 shouldBe "i¹23"
+    LatexParser.parse("i\\textsuperscript{123}").toOption.get._2 shouldBe "i¹²³"
     LatexParser
       .parse(
         "i\\textsuperscript{i\\textsuperscript{123 }}"
       )
-      .right
+      .toOption
       .get
       ._2 shouldBe "i^(i¹²³)"
     /*
     LaTeX2Unicode.convert("i\\textsuperscript\n  { 123 }") shouldBe "i¹²³"*/
   }
   test("Combining") {
-    LatexParser.parse("\\bar ab").right.get._2 shouldBe "a\u0304b"
-    LatexParser.parse("\\bar{ab}").right.get._2 shouldBe "a\u0304b"
+    LatexParser.parse("\\bar ab").toOption.get._2 shouldBe "a\u0304b"
+    LatexParser.parse("\\bar{ab}").toOption.get._2 shouldBe "a\u0304b"
 
-    LatexParser.parse("\\bar12").right.get._2 shouldBe "1\u03042"
-    LatexParser.parse("\\bar{}").right.get._2 shouldBe " \u0304"
+    LatexParser.parse("\\bar12").toOption.get._2 shouldBe "1\u03042"
+    LatexParser.parse("\\bar{}").toOption.get._2 shouldBe " \u0304"
 
-    /*   LatexParser.parse("\\=ab").right.get._2 shouldBe "a\u0304b"
-    LatexParser.parse("\\=\nab").right.get._2 shouldBe "a\u0304b"
-    LatexParser.parse("\\={}").right.get._2 shouldBe " \u0304"
-    LatexParser.parse("\\={ab}").right.get._2 shouldBe "a\u0304b"
+    /*   LatexParser.parse("\\=ab").toOption.get._2 shouldBe "a\u0304b"
+    LatexParser.parse("\\=\nab").toOption.get._2 shouldBe "a\u0304b"
+    LatexParser.parse("\\={}").toOption.get._2 shouldBe " \u0304"
+    LatexParser.parse("\\={ab}").toOption.get._2 shouldBe "a\u0304b"
     LatexParser.parse(
       "\\=\\k\\underline\\overline{a\\=bc}"
     ) shouldBe "a\u0305\u0332\u0304b\u0304\u0305\u0332c\u0305\u0332\u0328"
@@ -226,23 +237,22 @@ class L2UTest extends AnyFunSuite {
   }
 
   test("Style") {
-    LatexParser.parse("\\mathbf{}").right.get._2 shouldBe ""
-    LatexParser
+    val Right((_, empty)) = LatexParser.parse("\\mathbf{}")
+    empty shouldBe ""
+    val Right((_, abcabc)) = LatexParser
       .parse("\\mathbf ABC \\mathit ABC")
-      .right
-      .get
-      ._2 shouldBe "𝐀BC 𝐴BC"
+    abcabc shouldBe "𝐀BC 𝐴BC"
     /* LatexParser.parse(
       "\\mathbf {ABC} \\mathit {ABC}"
-    ).right.get._2 shouldBe "𝐀𝐁𝐂 𝐴𝐵𝐶"
-    LatexParser.parse("\\bf \\it ").right.get._2 shouldBe ""
+    ).toOption.get._2 shouldBe "𝐀𝐁𝐂 𝐴𝐵𝐶"
+    LatexParser.parse("\\bf \\it ").toOption.get._2 shouldBe ""
     LatexParser.parse(
       "ABC {\\bf ABC} {\\it ABC} ABC"
     ) shouldBe "ABC 𝐀𝐁𝐂 𝐴𝐵𝐶 ABC"
     LatexParser.parse(
       "ABC \\bf ABC \\it ABC ABC"
-    ).right.get._2 shouldBe "ABC 𝐀𝐁𝐂 𝐴𝐵𝐶 𝐴𝐵𝐶"
-    LatexParser.parse("A\\bf\n\nB\n\nC").right.get._2 shouldBe "A\n\n𝐁\n\n𝐂"*/
+    ).toOption.get._2 shouldBe "ABC 𝐀𝐁𝐂 𝐴𝐵𝐶 𝐴𝐵𝐶"
+    LatexParser.parse("A\\bf\n\nB\n\nC").toOption.get._2 shouldBe "A\n\n𝐁\n\n𝐂"*/
 
     LatexParser.parse("\\mathbf").isLeft shouldBe true
     LatexParser.parse("\\mathbf ").isLeft shouldBe true

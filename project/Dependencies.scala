@@ -3,8 +3,8 @@ import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 object V {
-  val catparse = "0.3.7"
-  val scalatest = "3.2.9"
+  val catparse = "0.3.8"
+  val scalatest = "3.2.13"
 }
 
 object Deps {
@@ -23,7 +23,7 @@ object Deps {
   }
 
   val scalatest = Seq(
-    ("org.scalatest", "scalatest", "3.2.9")
+    ("org.scalatest", "scalatest", V.scalatest)
   )
 
 }

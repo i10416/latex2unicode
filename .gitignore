@@ -5,3 +5,8 @@ target/
 out/
 *.log
 maven-repo/
+.vscode
+.metals
+.bloop
+project/metals.sbt
+project/project
