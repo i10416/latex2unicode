@@ -1,6 +1,6 @@
 Global / onChangedBuildSource := IgnoreSourceChanges
 val scala212Version = "2.12.15"
-val scala213Version = "2.13.8"
+val scala213Version = "2.13.9"
 val scala30Version = "3.0.2"
 val scala31Version = "3.1.2"
 inThisBuild(
